@@ -18,7 +18,7 @@ var _ = Describe("Guardian External Networker Client", func() {
 
 	BeforeEach(func() {
 		logger = lagertest.NewTestLogger("test")
-		externalNetworker = genclient.New(pathToFake)
+		externalNetworker = genclient.New(pathToHappyFake)
 	})
 
 	It("should forward the Network call to the external binary", func() {
@@ -36,7 +36,16 @@ var _ = Describe("Guardian External Networker Client", func() {
 		})
 	})
 
-	XContext("when the external binary exits with non-zero status code", func() {
+	Context("when the external binary exits with non-zero status code", func() {
+		It("should return an error", func() {
+			externalNetworker = genclient.New(pathToSadFake)
+			namespace, err := externalNetworker.Network(logger, "some-handle", "some-spec")
+			Expect(err).To(MatchError(ContainSubstring("ducati failed: exit status 17: something broke")))
+			Expect(namespace).To(BeEmpty())
+		})
+	})
+
+	XContext("when the external binary prints unparsable output", func() {
 		It("should return an error", func() {
 
 		})

@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-var pathToFake string
+var pathToHappyFake, pathToSadFake string
 
 func TestGENClient(t *testing.T) {
 	RegisterFailHandler(Fail)
@@ -17,7 +17,10 @@ func TestGENClient(t *testing.T) {
 
 var _ = BeforeSuite(func() {
 	var err error
-	pathToFake, err = gexec.Build("github.com/cloudfoundry-incubator/genclient/fake")
+	pathToHappyFake, err = gexec.Build("github.com/cloudfoundry-incubator/genclient/fakes/happy")
+	Expect(err).NotTo(HaveOccurred())
+
+	pathToSadFake, err = gexec.Build("github.com/cloudfoundry-incubator/genclient/fakes/sad")
 	Expect(err).NotTo(HaveOccurred())
 })
 

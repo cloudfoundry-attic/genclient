@@ -3,6 +3,7 @@ package genclient
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"os/exec"
 
 	"github.com/pivotal-golang/lager"
@@ -39,10 +40,7 @@ func (e *ExternalNetworkerClient) Network(log lager.Logger, handle, spec string)
 	if err != nil {
 		return "", err
 	}
-	err = cmd.Wait()
-	if err != nil {
-		panic(err)
-	}
+	ducatiErr := cmd.Wait()
 
 	var output struct {
 		Namespace string
@@ -51,6 +49,10 @@ func (e *ExternalNetworkerClient) Network(log lager.Logger, handle, spec string)
 	err = json.Unmarshal(stdoutBuffer.Bytes(), &output)
 	if err != nil {
 		panic(err)
+	}
+
+	if ducatiErr != nil {
+		return "", fmt.Errorf("ducati failed: %s: %s", ducatiErr.Error(), output.Error)
 	}
 	return output.Namespace, nil
 }
