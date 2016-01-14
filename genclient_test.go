@@ -40,14 +40,17 @@ var _ = Describe("Guardian External Networker Client", func() {
 		It("should return an error", func() {
 			externalNetworker = genclient.New(pathToSadFake)
 			namespace, err := externalNetworker.Network(logger, "some-handle", "some-spec")
-			Expect(err).To(MatchError(ContainSubstring("ducati failed: exit status 17: something broke")))
+			Expect(err).To(MatchError("ducati failed: exit status 17: something broke"))
 			Expect(namespace).To(BeEmpty())
 		})
 	})
 
-	XContext("when the external binary prints unparsable output", func() {
+	Context("when the external binary prints unparsable output", func() {
 		It("should return an error", func() {
-
+			externalNetworker = genclient.New("echo")
+			namespace, err := externalNetworker.Network(logger, "some-handle", "some-spec")
+			Expect(err).To(MatchError("ducati response cannot be parsed: unexpected end of JSON input: \n"))
+			Expect(namespace).To(BeEmpty())
 		})
 	})
 })

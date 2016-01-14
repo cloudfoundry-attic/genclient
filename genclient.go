@@ -48,7 +48,7 @@ func (e *ExternalNetworkerClient) Network(log lager.Logger, handle, spec string)
 	}
 	err = json.Unmarshal(stdoutBuffer.Bytes(), &output)
 	if err != nil {
-		panic(err)
+		return "", fmt.Errorf("ducati response cannot be parsed: %s: %s", err, stdoutBuffer.Bytes())
 	}
 
 	if ducatiErr != nil {
