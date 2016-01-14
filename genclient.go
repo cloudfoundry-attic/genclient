@@ -1,67 +1,21 @@
 package genclient
 
-import (
-	"bytes"
-	"encoding/json"
-	"fmt"
-	"os/exec"
-
-	"github.com/pivotal-golang/lager"
-)
+//go:generate counterfeiter --fake-name RPC . RPCInterface
+type RPCInterface interface {
+	ExecuteAndParse(methodName string, args map[string]interface{}, output interface{}) error
+}
 
 type ExternalNetworkerClient struct {
-	path string
+	RPC RPCInterface
 }
 
 func New(path string) *ExternalNetworkerClient {
-	return &ExternalNetworkerClient{path}
-}
-
-type methodCall struct {
-	Method string
-	Args   map[string]interface{} `json:",omitempty"`
-}
-
-func (e *ExternalNetworkerClient) Network(log lager.Logger, handle, spec string) (string, error) {
-	cmd := exec.Command(e.path)
-	call := methodCall{
-		"Network",
-		map[string]interface{}{
-			"Handle": handle,
-			"Spec":   spec,
+	return &ExternalNetworkerClient{
+		RPC: &RPC{
+			PathToBinary:  path,
+			CommandRunner: &CommandRunner{},
 		},
 	}
-	inputBytes, _ := json.Marshal(call)
-	cmd.Stdin = bytes.NewReader(inputBytes)
-	stdoutBuffer, stderrBuffer := &bytes.Buffer{}, &bytes.Buffer{}
-	cmd.Stdout = stdoutBuffer
-	cmd.Stderr = stderrBuffer
-	err := cmd.Start()
-	if err != nil {
-		return "", err
-	}
-	remoteErr := cmd.Wait()
-
-	var output struct {
-		Namespace string
-		Error     string
-	}
-	err = json.Unmarshal(stdoutBuffer.Bytes(), &output)
-	if err != nil {
-		if remoteErr != nil {
-			return "", fmt.Errorf("remote networker failed: %s:\n%s\n%s",
-				remoteErr,
-				stdoutBuffer.Bytes(),
-				stderrBuffer.Bytes(),
-			)
-		}
-		return "", fmt.Errorf("remote networker response cannot be parsed: %s: %s", err, stdoutBuffer.Bytes())
-	}
-
-	if remoteErr != nil {
-		return "", fmt.Errorf("remote networker failed: %s: %s", remoteErr.Error(), output.Error)
-	}
-	return output.Namespace, nil
 }
 
 func (*ExternalNetworkerClient) Capacity() uint64 {
