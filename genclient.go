@@ -40,7 +40,7 @@ func (e *ExternalNetworkerClient) Network(log lager.Logger, handle, spec string)
 	if err != nil {
 		return "", err
 	}
-	ducatiErr := cmd.Wait()
+	remoteErr := cmd.Wait()
 
 	var output struct {
 		Namespace string
@@ -48,11 +48,18 @@ func (e *ExternalNetworkerClient) Network(log lager.Logger, handle, spec string)
 	}
 	err = json.Unmarshal(stdoutBuffer.Bytes(), &output)
 	if err != nil {
-		return "", fmt.Errorf("ducati response cannot be parsed: %s: %s", err, stdoutBuffer.Bytes())
+		if remoteErr != nil {
+			return "", fmt.Errorf("remote networker failed: %s:\n%s\n%s",
+				remoteErr,
+				stdoutBuffer.Bytes(),
+				stderrBuffer.Bytes(),
+			)
+		}
+		return "", fmt.Errorf("remote networker response cannot be parsed: %s: %s", err, stdoutBuffer.Bytes())
 	}
 
-	if ducatiErr != nil {
-		return "", fmt.Errorf("ducati failed: %s: %s", ducatiErr.Error(), output.Error)
+	if remoteErr != nil {
+		return "", fmt.Errorf("remote networker failed: %s: %s", remoteErr.Error(), output.Error)
 	}
 	return output.Namespace, nil
 }

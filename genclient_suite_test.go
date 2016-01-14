@@ -3,12 +3,9 @@ package genclient_test
 import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/onsi/gomega/gexec"
 
 	"testing"
 )
-
-var pathToHappyFake, pathToSadFake string
 
 func TestGENClient(t *testing.T) {
 	RegisterFailHandler(Fail)
@@ -16,14 +13,12 @@ func TestGENClient(t *testing.T) {
 }
 
 var _ = BeforeSuite(func() {
-	var err error
-	pathToHappyFake, err = gexec.Build("github.com/cloudfoundry-incubator/genclient/fakes/happy")
-	Expect(err).NotTo(HaveOccurred())
-
-	pathToSadFake, err = gexec.Build("github.com/cloudfoundry-incubator/genclient/fakes/sad")
-	Expect(err).NotTo(HaveOccurred())
+	fakes = newFakesRepo()
+	Expect(fakes.Create("happy", `{ "Namespace": "some-namespace" }`, "", 0)).To(Succeed())
+	Expect(fakes.Create("sad", `{ "Error": "something broke" }`, "", 17)).To(Succeed())
+	Expect(fakes.Create("troublesome", `very bad, no JSON`, "some log message", 27)).To(Succeed())
 })
 
 var _ = AfterSuite(func() {
-	gexec.CleanupBuildArtifacts()
+	fakes.Cleanup()
 })

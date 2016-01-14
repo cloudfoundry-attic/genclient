@@ -18,7 +18,7 @@ var _ = Describe("Guardian External Networker Client", func() {
 
 	BeforeEach(func() {
 		logger = lagertest.NewTestLogger("test")
-		externalNetworker = genclient.New(pathToHappyFake)
+		externalNetworker = genclient.New(fakes.Binaries["happy"])
 	})
 
 	It("should forward the Network call to the external binary", func() {
@@ -36,21 +36,32 @@ var _ = Describe("Guardian External Networker Client", func() {
 		})
 	})
 
-	Context("when the external binary exits with non-zero status code", func() {
+	Context("when the external binary exits with status 0 but the output is not parsable as JSON", func() {
 		It("should return an error", func() {
-			externalNetworker = genclient.New(pathToSadFake)
+			externalNetworker = genclient.New("echo")
 			namespace, err := externalNetworker.Network(logger, "some-handle", "some-spec")
-			Expect(err).To(MatchError("ducati failed: exit status 17: something broke"))
+			Expect(err).To(MatchError("remote networker response cannot be parsed: unexpected end of JSON input: \n"))
 			Expect(namespace).To(BeEmpty())
 		})
 	})
 
-	Context("when the external binary prints unparsable output", func() {
-		It("should return an error", func() {
-			externalNetworker = genclient.New("echo")
-			namespace, err := externalNetworker.Network(logger, "some-handle", "some-spec")
-			Expect(err).To(MatchError("ducati response cannot be parsed: unexpected end of JSON input: \n"))
-			Expect(namespace).To(BeEmpty())
+	Context("when the external binary exits with non-zero status code", func() {
+		Context("when the output is parsable as JSON", func() {
+			It("should return an error", func() {
+				externalNetworker = genclient.New(fakes.Binaries["sad"])
+				namespace, err := externalNetworker.Network(logger, "some-handle", "some-spec")
+				Expect(err).To(MatchError("remote networker failed: exit status 17: something broke"))
+				Expect(namespace).To(BeEmpty())
+			})
+		})
+		Context("when the output is not parsable as JSON", func() {
+			It("should return an error including the stdout and stderr", func() {
+				externalNetworker = genclient.New(fakes.Binaries["troublesome"])
+				namespace, err := externalNetworker.Network(logger, "some-handle", "some-spec")
+				Expect(err).To(MatchError("remote networker failed: exit status 27:\nvery bad, no JSON\nsome log message"))
+				Expect(namespace).To(BeEmpty())
+			})
 		})
 	})
+
 })
