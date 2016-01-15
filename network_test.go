@@ -67,6 +67,17 @@ var _ = Describe("Network method", func() {
 	})
 
 	Context("when the resulting JSON includes an error string", func() {
+		It("should return that string as an error, and not complain about missing namespace", func() {
+			rpc.ExecuteAndParseStub = func(methodName string, args map[string]interface{}, output interface{}) error {
+				json.Unmarshal([]byte(`{"Error": "some error"}`), &output)
+				return nil
+			}
+
+			ns, err := externalNetworker.Network(logger, "some-handle", "some-spec")
+			Expect(err).To(MatchError("some error"))
+			Expect(ns).To(BeEmpty())
+		})
+
 		It("should return that string as an error, and not return a namespace", func() {
 			rpc.ExecuteAndParseStub = func(methodName string, args map[string]interface{}, output interface{}) error {
 				json.Unmarshal([]byte(`{"Namespace": "nonsense", "Error": "some error"}`), &output)
@@ -77,7 +88,5 @@ var _ = Describe("Network method", func() {
 			Expect(err).To(MatchError("some error"))
 			Expect(ns).To(BeEmpty())
 		})
-
 	})
-
 })

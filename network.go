@@ -21,11 +21,12 @@ func (e *ExternalNetworkerClient) Network(log lager.Logger, handle, spec string)
 		return "", err
 	}
 
-	if output.Namespace == "" {
-		return "", fmt.Errorf("remote networker output missing Namespace")
-	}
 	if output.Error != "" {
 		return "", errors.New(output.Error)
+	}
+
+	if output.Namespace == "" {
+		return "", fmt.Errorf("remote networker output missing Namespace")
 	}
 	return output.Namespace, nil
 }
