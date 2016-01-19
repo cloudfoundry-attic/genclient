@@ -9,11 +9,12 @@ type ExternalNetworkerClient struct {
 	RPC RPCInterface
 }
 
-func New(path string) *ExternalNetworkerClient {
+func New(ducatiBinaryPath, cniPluginDir string) *ExternalNetworkerClient {
 	return &ExternalNetworkerClient{
 		RPC: &RPC{
-			PathToBinary:  path,
-			CommandRunner: &CommandRunner{},
+			PathToBinary:       ducatiBinaryPath,
+			CommandRunner:      &CommandRunner{},
+			CNIPluginDirectory: cniPluginDir,
 		},
 	}
 }

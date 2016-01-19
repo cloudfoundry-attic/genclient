@@ -22,8 +22,9 @@ var _ = Describe("RPC", func() {
 		commandRunner = &fakes.CommandRunner{}
 
 		rpc = &genclient.RPC{
-			PathToBinary:  "/some/path/to/a/binary",
-			CommandRunner: commandRunner,
+			PathToBinary:       "/some/path/to/a/binary",
+			CNIPluginDirectory: "/some/path/to/cni/bin",
+			CommandRunner:      commandRunner,
 		}
 	})
 
@@ -70,6 +71,17 @@ var _ = Describe("RPC", func() {
 		Expect(output.ReturnValue1).To(Equal("some-return-value-1"))
 		Expect(output.ReturnValue2).To(Equal(-12345))
 		Expect(output.Error).To(Equal("some-error-value"))
+	})
+
+	It("should set the CNI_PLUGIN_DIR env var on the ducati process", func() {
+		commandRunner.RunStub = func(cmd *exec.Cmd) error {
+			Expect(cmd.Env).To(ContainElement("CNI_PLUGIN_DIR=/some/path/to/cni/bin"))
+			cmd.Stdout.Write([]byte("{}"))
+			return nil
+		}
+		var output struct{}
+		err := rpc.ExecuteAndParse("some-method-name", map[string]interface{}{}, &output)
+		Expect(err).NotTo(HaveOccurred())
 	})
 
 	Context("when the command runner errors", func() {

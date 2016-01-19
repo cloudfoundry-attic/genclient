@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"os"
 	"os/exec"
 )
 
@@ -13,8 +14,9 @@ type CommandRunnerInterface interface {
 }
 
 type RPC struct {
-	PathToBinary  string
-	CommandRunner CommandRunnerInterface
+	PathToBinary       string
+	CNIPluginDirectory string
+	CommandRunner      CommandRunnerInterface
 }
 
 func (r *RPC) ExecuteAndParse(methodName string, args map[string]interface{}, output interface{}) error {
@@ -31,6 +33,7 @@ func (r *RPC) ExecuteAndParse(methodName string, args map[string]interface{}, ou
 	stdoutBuffer, stderrBuffer := &bytes.Buffer{}, &bytes.Buffer{}
 	cmd.Stdout = stdoutBuffer
 	cmd.Stderr = stderrBuffer
+	cmd.Env = append(os.Environ(), fmt.Sprintf("%s=%s", "CNI_PLUGIN_DIR", r.CNIPluginDirectory))
 	err = r.CommandRunner.Run(cmd)
 	if err != nil {
 		return err
