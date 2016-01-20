@@ -4,8 +4,10 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"log"
 	"os"
 	"os/exec"
+	"strings"
 )
 
 //go:generate counterfeiter --fake-name CommandRunner . CommandRunnerInterface
@@ -43,6 +45,11 @@ func (r *RPC) ExecuteAndParse(methodName string, args map[string]interface{}, ou
 	if err != nil {
 		return fmt.Errorf("remote networker response cannot be parsed: %s\n%s\n%s",
 			err, stdoutBuffer.Bytes(), stderrBuffer.Bytes())
+	}
+
+	stderrString := strings.TrimSpace(string(stderrBuffer.Bytes()))
+	if stderrString != "" {
+		log.Println(stderrString)
 	}
 	return nil
 }
