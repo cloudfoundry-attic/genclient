@@ -7,17 +7,22 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
+	"github.com/pivotal-golang/lager"
+	"github.com/pivotal-golang/lager/lagertest"
+
 	"github.com/cloudfoundry-incubator/genclient"
 	"github.com/cloudfoundry-incubator/genclient/fakes"
 )
 
 var _ = Describe("Network method", func() {
 	var (
+		logger            lager.Logger
 		rpc               *fakes.RPC
 		externalNetworker *genclient.ExternalNetworkerClient
 	)
 
 	BeforeEach(func() {
+		logger = lagertest.NewTestLogger("test")
 		rpc = &fakes.RPC{}
 		externalNetworker = &genclient.ExternalNetworkerClient{RPC: rpc}
 	})
@@ -32,7 +37,7 @@ var _ = Describe("Network method", func() {
 			return nil
 		}
 
-		ns, err := externalNetworker.Network("some-handle", "some-spec")
+		ns, err := externalNetworker.Network(logger, "some-handle", "some-spec")
 		Expect(err).NotTo(HaveOccurred())
 
 		Expect(ns).To(Equal("some-namespace"))
@@ -44,7 +49,7 @@ var _ = Describe("Network method", func() {
 				return errors.New("some error")
 			}
 
-			_, err := externalNetworker.Network("some-handle", "some-spec")
+			_, err := externalNetworker.Network(logger, "some-handle", "some-spec")
 			Expect(err).To(MatchError("some error"))
 		})
 	})
@@ -56,7 +61,7 @@ var _ = Describe("Network method", func() {
 				return nil
 			}
 
-			_, err := externalNetworker.Network("some-handle", "some-spec")
+			_, err := externalNetworker.Network(logger, "some-handle", "some-spec")
 			Expect(err).To(MatchError(`remote networker output missing Namespace`))
 		})
 	})
@@ -68,7 +73,7 @@ var _ = Describe("Network method", func() {
 				return nil
 			}
 
-			ns, err := externalNetworker.Network("some-handle", "some-spec")
+			ns, err := externalNetworker.Network(logger, "some-handle", "some-spec")
 			Expect(err).To(MatchError("some error"))
 			Expect(ns).To(BeEmpty())
 		})
@@ -79,7 +84,7 @@ var _ = Describe("Network method", func() {
 				return nil
 			}
 
-			ns, err := externalNetworker.Network("some-handle", "some-spec")
+			ns, err := externalNetworker.Network(logger, "some-handle", "some-spec")
 			Expect(err).To(MatchError("some error"))
 			Expect(ns).To(BeEmpty())
 		})

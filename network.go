@@ -3,9 +3,11 @@ package genclient
 import (
 	"errors"
 	"fmt"
+
+	"github.com/pivotal-golang/lager"
 )
 
-func (e *ExternalNetworkerClient) Network(handle, spec string) (string, error) {
+func (e *ExternalNetworkerClient) Network(log lager.Logger, handle, spec string) (string, error) {
 	var output struct {
 		Namespace string
 		Error     string
