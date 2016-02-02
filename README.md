@@ -1,4 +1,7 @@
-# genclient
+# DEPRECATED
+The Container Networking team owns this repo.  We are no longer using it.  We will delete it once we have confidence that we won't be needing it again.
+
+## genclient
 Guardian External Networker Client
 
 See also:
